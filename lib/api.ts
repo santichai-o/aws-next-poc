@@ -29,10 +29,18 @@ export class ApiClient {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        console.error("API request error:", errorData)
+        return {
+          success: false,
+          message: errorData.message || `HTTP error! status: ${response.status}`,
+          error: errorData.error || 'Unknown error',
+          status: response.status,
+          ...errorData
+        }
       }
       
-      return await response.json()
+      const data = await response.json()
+      return { success: true, ...data }
     } catch (error) {
       console.error('API request failed:', error)
       throw error
@@ -52,6 +60,13 @@ export class ApiClient {
     return this.request('/members/signin', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    })
+  }
+
+  // Member logout API
+  async logout(): Promise<any> {
+    return this.request('/members/signout', {
+      method: 'POST',
     })
   }
 
@@ -75,7 +90,14 @@ export class ApiClient {
     })
   }
 
-  // Generic HTTP methods
+  async confirm(email: string, code: string): Promise<any> {
+    return this.request('/members/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    })
+  }
+
+  // Member Profile APIs
   async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' })
   }

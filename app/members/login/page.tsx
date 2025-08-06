@@ -6,12 +6,11 @@ import { apiClient } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
   
   // Get environment variables'
-  const base_url = process.env.NEXT_PUBLIC_APP_URL;
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
   const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
 
@@ -22,37 +21,22 @@ export default function LoginPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
-    setError(null);
+    setErrorMessage(null);
     
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
     try {
-      const response = await fetch(`${base_url}/api/members/signin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        cache: "no-store",
-      });
+      const response = await apiClient.login(email, password);
 
-      if (response.ok) {
-        router.push('/'); // Redirect to home page on success
-      } else if (response.status === 401) {
-        const errorData = await response.json();
-
-        if (errorData.message === 'UserNotConfirmedException') {
-          setError('Your account is not confirmed. Please verify your email.');
-          router.push('/members/verify'); // Redirect for verification
-        } else {
-          setError(errorData.message || 'Unauthorized access.');
-        }
+      if (response.success === true) {
+        router.push('/');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Login failed');
+        setErrorMessage(response.message || 'Login failed');
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+      setErrorMessage(error.message || 'An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -65,9 +49,9 @@ export default function LoginPage() {
           <h1 className="mt-4 text-2xl font-bold">Sign in to your account</h1>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          {error && (
+          {errorMessage && (
             <div className="text-red-300 text-sm mb-4 p-2 bg-red-800 rounded">
-              {error}
+              {errorMessage}
             </div>
           )}
           <div>
@@ -119,7 +103,7 @@ export default function LoginPage() {
             onClick={(e) => {
               if (!auth_domain || !client_id) {
                 e.preventDefault();
-                setError("LINE connection is not configured. Please check environment variables.");
+                setErrorMessage("LINE connection is not configured. Please check environment variables.");
               }
             }}
           >

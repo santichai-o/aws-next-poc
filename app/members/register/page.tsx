@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const router = useRouter()
-  const base_url = process.env.NEXT_PUBLIC_APP_URL;
+  
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -21,15 +21,17 @@ export default function RegisterPage() {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const response = await fetch(`${base_url}/api/members`, {
-        method: "POST",
-        body: formData,
-        cache: "no-store",
+      const response = await apiClient.register({
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+        phoneNumber: formData.get('phoneNumber') as string,
+        countryCode: formData.get('countryCode') as string,
+        nationalId: formData.get('nationalId') as string,
       });
 
-      console.log('Registration response:', response)
-
-      if (response.ok) {
+      if (response.success) {
         setSuccess('Registration successful! Redirecting to login...')
         // Redirect to login page after successful registration
         setTimeout(() => {

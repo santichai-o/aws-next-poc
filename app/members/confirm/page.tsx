@@ -2,6 +2,7 @@
 
 import React, { useState, /* useEffect */ } from "react";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
 
 export default function ConfirmPage() {
   const router = useRouter();
@@ -9,8 +10,6 @@ export default function ConfirmPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   // const [mounted, setMounted] = useState<boolean>(false);
-
-  const base_url = process.env.NEXT_PUBLIC_APP_URL;
 
   // useEffect(() => {
   //   setMounted(true);
@@ -27,14 +26,9 @@ export default function ConfirmPage() {
     const code = formData.get('code') as string;
 
     try {
-      const response = await fetch(`${base_url}/api/members/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-        cache: "no-store",
-      });
+      const response = await apiClient.confirm(email, code);
 
-      if (response.ok) {
+      if (response.success) {
         setSuccessMessage('Account confirmed successfully! Redirecting to login...');
         
         // Redirect to login page after 2 seconds
@@ -42,8 +36,7 @@ export default function ConfirmPage() {
           router.push('/members/login');
         }, 2000);
       } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.message || 'Confirmation failed. Please check your email and code.');
+        setErrorMessage(response.message || 'Confirmation failed. Please check your email and code.');
       }
       
     } catch (error) {

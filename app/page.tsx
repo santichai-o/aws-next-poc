@@ -10,7 +10,8 @@ export default function Home() {
   const [userData, setUserData] = useState<MemberProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Get environment variables
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
@@ -22,18 +23,20 @@ export default function Home() {
 
   const fetchUserData = async () => {
     try {
-      const memberProfile = await apiClient.getMyProfile()
-      setUserData(memberProfile)
+      const response = await apiClient.getMyProfile() as any
+      
+      if (response.success) {
+        setUserData(response)
+      } else {
+        // Handle error response
+        if (response.status === 401) {
+          router.push('/members/login')
+          return
+        }
+        setError(response.message || 'Failed to fetch user data')
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while fetching user data'
-      
-      // Check if it's a 401 error (unauthorized)
-      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('User token not found')) {
-        // Redirect to login page
-        router.push('/members/login')
-        return
-      }
-      
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -44,14 +47,26 @@ export default function Home() {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setSuccessMessage(null);
 
     const formData = new FormData(event.currentTarget);
     const updateData = Object.fromEntries(formData.entries()) as any;
 
     try {
-      const updatedProfile = await apiClient.updateMyProfile(updateData)
-      console.log('Profile updated successfully')
-      setUserData(updatedProfile) // อัปเดตข้อมูลใหม่จาก response
+      const response = await apiClient.updateMyProfile(updateData) as any
+      
+      if (response.success) {
+        console.log('Profile updated successfully')
+        setUserData(response) // อัปเดตข้อมูลใหม่จาก response
+        setSuccessMessage('Profile updated successfully!')
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } else {
+        setError(response.message || 'Failed to update profile')
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred during profile update')
     } finally {
@@ -61,18 +76,18 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-      });
+      const response = await apiClient.logout();
 
-      if (response.ok) {
+      if (response.success === true) {
         router.push('/members/login'); // Redirect to login page after logout
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Logout failed');
+        setError(response.message || 'Logout failed');
       }
     } catch (error) {
       setError(error.message || 'An error occurred during logout');
+    } finally {
+      setLoading(false);
+      setIsSubmitting(false);
     }
   };
   
@@ -94,6 +109,17 @@ export default function Home() {
             <h1 className="mt-4 text-2xl font-bold">Edit Your Profile</h1>
           </div>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            {errorMessage && (
+              <div className="text-red-300 text-sm mb-4 p-2 bg-red-800 rounded">
+                {errorMessage}
+              </div>
+            )}
+            {successMessage && (
+              <div className="text-green-300 text-sm mb-4 p-2 bg-green-800 rounded">
+                {successMessage}
+              </div>
+            )}
+
             {/* <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-200">
                 Username
@@ -172,9 +198,18 @@ export default function Home() {
                 defaultValue={userData.phoneNumber || ""}
               />
             </div>
-            {error && (
+            {/* {error && (
               <div className="text-red-500 text-sm">{error}</div> // Display error message
-            )}
+            )} */}
+
+            <button
+              type="submit"
+              className="w-full py-2 px-4 text-white rounded bg-gray-700 hover:bg-gray-800 font-semibold"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Updating..." : "Update Profile"}
+            </button>
+
             {
               userData.lineConnected ? (
                 <div className="text-green-500 text-md font-semibold">
@@ -202,14 +237,6 @@ export default function Home() {
                 </a>
               )
             }
-
-            <button
-              type="submit"
-              className="w-full py-2 px-4 text-white rounded bg-gray-700 hover:bg-gray-800 font-semibold"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Updating..." : "Update Profile"}
-            </button>
 
             <button
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
