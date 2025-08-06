@@ -1,0 +1,144 @@
+'use client'
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+  
+  // Get environment variables'
+  const base_url = process.env.NEXT_PUBLIC_APP_URL;
+  const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
+  const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      const response = await fetch(`${base_url}/api/members/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        router.push('/'); // Redirect to home page on success
+      } else if (response.status === 401) {
+        const errorData = await response.json();
+
+        if (errorData.message === 'UserNotConfirmedException') {
+          setError('Your account is not confirmed. Please verify your email.');
+          router.push('/members/verify'); // Redirect for verification
+        } else {
+          setError(errorData.message || 'Unauthorized access.');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Login failed');
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-md p-8 bg-blue-500 shadow-lg shadow-blue-500/50 rounded-lg">
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="mt-4 text-2xl font-bold">Sign in to your account</h1>
+        </div>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          {error && (
+            <div className="text-red-300 text-sm mb-4 p-2 bg-red-800 rounded">
+              {error}
+            </div>
+          )}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+              Email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+              Password
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className={`w-full py-2 px-4 text-white rounded font-semibold ${
+              isSubmitting ? "bg-gray-500 cursor-not-allowed" : "bg-gray-700 hover:bg-gray-800"
+            }`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Signing In..." : "Sign In"}
+          </button>
+
+          <a
+            href={auth_domain && client_id && mounted ? 
+              `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${encodeURIComponent(window.location.origin + "/user/line-callback")}` :
+              "#"
+            }
+            className={`text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+              auth_domain && client_id 
+                ? "bg-green-500 hover:bg-green-700 text-white" 
+                : "bg-gray-400 text-gray-600 cursor-not-allowed"
+            }`}
+            onClick={(e) => {
+              if (!auth_domain || !client_id) {
+                e.preventDefault();
+                setError("LINE connection is not configured. Please check environment variables.");
+              }
+            }}
+          >
+            {auth_domain && client_id ? "Connect LINE Account" : "LINE Connection Not Configured"}
+          </a>
+        </form>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-200">
+            Don't have an account?{' '}
+            <a
+              href="/members/register"
+              className="font-medium text-white hover:text-gray-200 underline"
+            >
+              Create account here
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
