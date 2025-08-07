@@ -2,20 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
+    // const formData = await request.formData();
 
-    const firstName = formData.get("firstName");
-    const lastName = formData.get("lastName");
-    const email = formData.get("email");
-    const password = formData.get("password");
-    const phoneNumber = formData.get("phoneNumber");
-    const countryCode = formData.get("countryCode");
-    const nationalId = formData.get("nationalId");
+    // const firstName = formData.get("firstName");
+    // const lastName = formData.get("lastName");
+    // const email = formData.get("email");
+    // const password = formData.get("password");
+    // const phoneNumber = formData.get("phoneNumber");
+    // const countryCode = formData.get("countryCode");
+    // const nationalId = formData.get("nationalId");
+
+    const memberData = await request.json();
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !password || !phoneNumber || !countryCode || !nationalId) {
+    if (!memberData.firstName || !memberData.lastName || !memberData.email || !memberData.password || !memberData.phoneNumber || !memberData.countryCode || !memberData.nationalId) {
       return NextResponse.json(
-        { success: false, message: "All fields are required" }, 
+        { success: false, message: "All fields are required" },
         { status: 400 }
       );
     }
@@ -24,16 +26,6 @@ export async function POST(request: NextRequest) {
     if (!apiUrl) {
       return NextResponse.json({ success: false, message: "API_URL not set" }, { status: 500 });
     }
-
-    const memberData = {
-      firstName: firstName.toString(),
-      lastName: lastName.toString(),
-      email: email.toString(),
-      password: password.toString(),
-      phoneNumber: phoneNumber.toString(),
-      countryCode: countryCode.toString(),
-      nationalId: nationalId.toString(),
-    };
 
     console.log('Member registration data:', memberData);
 
@@ -44,16 +36,11 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     });
 
-    console.log('Member registration response:', res);
-
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
+      const error = await res.json().catch(() => ({}));
       return NextResponse.json(
-        { 
-          success: false, 
-          message: errorData.message || "Failed to create member account" 
-        }, 
-        { status: res.status }
+        { success: false, message: error.message || "Failed to create member" },
+        { status: res.status },
       );
     }
 

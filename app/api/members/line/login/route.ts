@@ -1,22 +1,24 @@
-// app/api/login/route.ts (Next.js 13+)
-// หรือ pages/api/login.ts (Next.js 12)
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
-
   const apiUrl = process.env.API_URL;
+
   if (!apiUrl) {
     return NextResponse.json({ success: false, message: "API_URL not set" }, { status: 500 });
   }
 
+  const { code, redirectUri } = await request.json();
+  if (!code || !redirectUri) {
+    return NextResponse.json({ success: false, message: "Code not provided" }, { status: 400 });
+  }
+
   try {
-    const res = await fetch(`${apiUrl}/members/signin`, {
+    const res = await fetch(`${apiUrl}/members/line/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ code, redirectUri }),
       cache: "no-store",
     });
 
@@ -41,7 +43,6 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Login API error:", error);
     return NextResponse.json({ success: false, message: "Unexpected error" }, { status: 500 });
   }
 }

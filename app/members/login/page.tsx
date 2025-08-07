@@ -14,6 +14,14 @@ export default function LoginPage() {
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
   const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
 
+  // Helper function to get redirect URI safely
+  const getRedirectUri = () => {
+    if (typeof window !== 'undefined') {
+      return encodeURIComponent(window.location.origin + "/members/line-callback");
+    }
+    return "";
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -92,7 +100,7 @@ export default function LoginPage() {
 
           <a
             href={auth_domain && client_id && mounted ? 
-              `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${encodeURIComponent(window.location.origin + "/user/line-callback")}` :
+              `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${getRedirectUri()}` :
               "#"
             }
             className={`text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${

@@ -97,6 +97,20 @@ export class ApiClient {
     })
   }
 
+  async lineLogin(code: string, redirectUri: string): Promise<any> {
+    return this.request('/members/line/login', {
+      method: 'POST',
+      body: JSON.stringify({ code, redirectUri }),
+    })
+  }
+
+  async lineConnect(code: string, redirectUri: string): Promise<any> {
+    return this.request('/members/line/connect', {
+      method: 'POST',
+      body: JSON.stringify({ code, redirectUri }),
+    })
+  }
+
   // Member Profile APIs
   async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' })

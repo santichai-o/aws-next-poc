@@ -1,12 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MemberProfile } from "@/types";
 import { apiClient } from "@/lib/api";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function Home() {
   const router = useRouter();
+  const mounted = useMounted();
   const [userData, setUserData] = useState<MemberProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -17,11 +19,15 @@ export default function Home() {
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
   const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  // Helper function to get redirect URI safely
+  const getRedirectUri = () => {
+    if (typeof window !== 'undefined') {
+      return encodeURIComponent(window.location.origin + "/members/line-connect");
+    }
+    return "";
+  };
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const response = await apiClient.getMyProfile() as any
       
@@ -41,7 +47,13 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (mounted) {
+      fetchUserData();
+    }
+  }, [mounted, fetchUserData]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -84,14 +96,15 @@ export default function Home() {
         setError(response.message || 'Logout failed');
       }
     } catch (error) {
-      setError(error.message || 'An error occurred during logout');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during logout'
+      setError(errorMessage);
     } finally {
       setLoading(false);
       setIsSubmitting(false);
     }
   };
   
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div>Loading...</div>
@@ -217,8 +230,8 @@ export default function Home() {
                 </div>
               ) : (
                 <a
-                  href={auth_domain && client_id ? 
-                    `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${encodeURIComponent(window.location.origin + "/user/line-connect")}` :
+                  href={auth_domain && client_id && mounted ? 
+                    `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${getRedirectUri()}` :
                     "#"
                   }
                   className={`text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${

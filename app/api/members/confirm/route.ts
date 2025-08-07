@@ -25,8 +25,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!res.ok) {
-      const errorData = await res.json();
-      console.error("Error confirming member:", errorData);
+      const errorData = await res.json().catch(() => ({}));
       return NextResponse.json(
         { success: false, message: errorData.message || "Failed to verify code" },
         { status: res.status }

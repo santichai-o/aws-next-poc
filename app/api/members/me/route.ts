@@ -75,7 +75,7 @@ export async function PATCH(request: NextRequest) {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${userToken}`,
+        "Authorization": `Bearer ${userToken}`,
       },
       body: JSON.stringify(await request.json()),
     });

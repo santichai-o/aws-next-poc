@@ -38,8 +38,8 @@ export default function RegisterPage() {
           router.push('/members/confirm')
         }, 2000)
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Login failed')
+        // const errorData = await response.json();
+        setError(response.message || 'Login failed')
       }
     } catch (error) {
       console.error('Registration error:', error)
