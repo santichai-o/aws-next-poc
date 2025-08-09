@@ -79,3 +79,7 @@ export interface UserForm {
   email: string
   role: User['role']
 }
+
+export interface SessionData {
+  idToken?: string;
+}

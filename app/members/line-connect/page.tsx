@@ -11,7 +11,7 @@ export default function LandingPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const code = searchParams.get('code'); // Access the 'code' query parameter
+    const code = searchParams?.get('code'); // Access the 'code' query parameter
 
     const performServerSideOperations = async (code) => {
       try {

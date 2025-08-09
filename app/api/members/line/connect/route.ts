@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "@/lib/session";
+import { SessionData } from "@/types";
 
 export async function POST(request: NextRequest) {
-  const session = await getIronSession(request, new NextResponse(), sessionOptions);
+  const session = await getIronSession<SessionData>(request, new NextResponse(), sessionOptions);
 
   if (!session || !session.idToken) {
     return NextResponse.json(

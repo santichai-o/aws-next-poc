@@ -61,3 +61,17 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+!.elasticbeanstalk/config.yml
+
+# Deployment files and large archives
+*.zip
+deploy*.zip
+test.zip
+app-check.zip
+deploy-check.zip
+deploy-test.zip

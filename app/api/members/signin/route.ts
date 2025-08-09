@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "@/lib/session";
+import { SessionData } from "@/types";
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
@@ -32,9 +33,11 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ success: true });
 
     // Dynamically set session expiration
-    sessionOptions.cookieOptions.maxAge = data.expiresIn;
+    if (sessionOptions.cookieOptions) {
+      sessionOptions.cookieOptions.maxAge = data.expiresIn;
+    }
 
-    const session = await getIronSession(request, response, sessionOptions);
+    const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
     session.idToken = data.idToken;
     await session.save();
