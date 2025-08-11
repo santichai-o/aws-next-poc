@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// import jwt from 'jsonwebtoken';
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "@/lib/session";
 import { SessionData } from "@/types";
@@ -14,6 +15,15 @@ export async function GET(request: NextRequest) {
   }
 
   const userToken = session.idToken;
+
+  // ตัวอย่างการดึงข้อมูลจาก token
+  // try {
+  //   const decoded = jwt.decode(userToken);
+  //   console.log('Member ID:', decoded['custom:member-id']);
+  // } catch (err) {
+  //   console.error('Invalid ID Token', err);
+  // }
+
   const apiUrl = process.env.API_URL;
 
   if (!apiUrl) {

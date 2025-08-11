@@ -12,12 +12,12 @@ export default function LoginPage() {
   
   // Get environment variables'
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
-  const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
+  const client_id = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
 
   // Helper function to get redirect URI safely
   const getRedirectUri = () => {
     if (typeof window !== 'undefined') {
-      return encodeURIComponent(window.location.origin + "/members/line-callback");
+      return encodeURIComponent(process.env.NEXT_PUBLIC_APP_URL + '/api/members/line-callback');
     }
     return "";
   };

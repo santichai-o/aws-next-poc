@@ -17,12 +17,12 @@ export default function Home() {
 
   // Get environment variables
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
-  const client_id = process.env.NEXT_PUBLIC_CLIENT_ID;
+  const client_id = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
 
   // Helper function to get redirect URI safely
   const getRedirectUri = () => {
     if (typeof window !== 'undefined') {
-      return encodeURIComponent(window.location.origin + "/members/line-connect");
+      return encodeURIComponent(window.location.origin + "/api/members/line-connect");
     }
     return "";
   };
@@ -224,11 +224,11 @@ export default function Home() {
             </button>
 
             {
-              userData.lineConnected ? (
-                <div className="text-green-500 text-md font-semibold">
-                  LINE User Connected!
-                </div>
-              ) : (
+              // userData.lineConnected ? (
+              //   <div className="text-green-500 text-md font-semibold">
+              //     LINE User Connected!
+              //   </div>
+              // ) : (
                 <a
                   href={auth_domain && client_id && mounted ? 
                     `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${getRedirectUri()}` :
@@ -248,7 +248,7 @@ export default function Home() {
                 >
                   {auth_domain && client_id ? "Connect LINE Account" : "LINE Connection Not Configured"}
                 </a>
-              )
+              // )
             }
 
             <button
