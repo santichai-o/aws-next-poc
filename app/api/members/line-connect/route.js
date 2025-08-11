@@ -72,6 +72,8 @@ export async function GET(req) {
 
     const data = await res.json().catch(() => ({}));
 
+    // console.log('Connect LINE response:', data);
+
     if (!res.ok) {
       return NextResponse.json(
         { success: false, message: data.message || "Invalid credentials" },
