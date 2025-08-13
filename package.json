@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.864.0",
     "iron-session": "^8.0.4",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.3.5",
