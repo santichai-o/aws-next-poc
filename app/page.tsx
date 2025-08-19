@@ -1,12 +1,15 @@
-'use client'
+'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { jwtDecode } from "jwt-decode";  // ✅ ใช้ named import
 import { useRouter } from "next/navigation";
 import { MemberProfile } from "@/types";
 import { apiClient } from "@/lib/api";
 import { useMounted } from "@/hooks/useMounted";
 
-export default function Home() {
+export default function Profile() {
+  const { data: session } = useSession();
   const router = useRouter();
   const mounted = useMounted();
   const [userData, setUserData] = useState<MemberProfile | null>(null);
@@ -86,180 +89,159 @@ export default function Home() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const response = await apiClient.logout();
+  if (!session || loading || userData === null) return <div>Loading...</div>;
 
-      if (response.success === true) {
-        router.push('/members/login'); // Redirect to login page after logout
-      } else {
-        setError(response.message || 'Logout failed');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred during logout'
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-      setIsSubmitting(false);
-    }
-  };
-  
-  if (!mounted || loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div>Loading...</div>
+  // Decode idToken
+  const decoded = session.idToken
+    ? jwtDecode(session.idToken)
+    : null;
+
+  /* return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold">Profile</h1>
+      <pre className="bg-gray-100 p-4 rounded mt-4">
+        {decoded ? JSON.stringify(decoded, null, 2) : "No idToken found"}
+      </pre>
+      <div className="mt-4">
+        <button
+          onClick={() => signOut()}
+          className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Sign Out
+        </button>
       </div>
-    );
-  }
-  
-  if (!userData) {
-    return <div>No user data found. Please log in.</div>;
-  } else {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="w-full max-w-md p-8 bg-blue-500 shadow-lg shadow-blue-500/50 rounded-lg">
-          <div className="flex flex-col items-center mb-6">
-            <h1 className="mt-4 text-2xl font-bold">Edit Your Profile</h1>
-          </div>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            {errorMessage && (
-              <div className="text-red-300 text-sm mb-4 p-2 bg-red-800 rounded">
-                {errorMessage}
-              </div>
-            )}
-            {successMessage && (
-              <div className="text-green-300 text-sm mb-4 p-2 bg-green-800 rounded">
-                {successMessage}
-              </div>
-            )}
-
-            {/* <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-200">
-                Username
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="username"
-                name="username"
-                type="text"
-                defaultValue={userData.username || ""}
-                disabled
-                required
-              />
-            </div> */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-200">
-                Email
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={userData.email || ""}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">
-                First Name
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="firstName"
-                name="firstName"
-                type="text"
-                defaultValue={userData.firstName || ""}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">
-                Last Name
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="lastName"
-                name="lastName"
-                type="text"
-                defaultValue={userData.lastName || ""}
-                required
-              />
-            </div>
-            {/* <div>
-              <label htmlFor="lastname" className="block text-sm font-medium text-gray-200">
-                Last Name
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="lastname"
-                name="lastname"
-                type="text"
-                defaultValue={userData.lastname || ""}
-                required
-              />
-            </div> */}
-            <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-200">
-                Phone
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="phoneNumber"
-                name="phoneNumber"
-                type="tel"
-                defaultValue={userData.phoneNumber || ""}
-              />
-            </div>
-            {/* {error && (
-              <div className="text-red-500 text-sm">{error}</div> // Display error message
-            )} */}
-
-            <button
-              type="submit"
-              className="w-full py-2 px-4 text-white rounded bg-gray-700 hover:bg-gray-800 font-semibold"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Updating..." : "Update Profile"}
-            </button>
-
-            {
-              // userData.lineConnected ? (
-              //   <div className="text-green-500 text-md font-semibold">
-              //     LINE User Connected!
-              //   </div>
-              // ) : (
-                <a
-                  href={auth_domain && client_id && mounted ? 
-                    `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${getRedirectUri()}` :
-                    "#"
-                  }
-                  className={`text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-                    auth_domain && client_id 
-                      ? "bg-green-500 hover:bg-green-700 text-white" 
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
-                  }`}
-                  onClick={(e) => {
-                    if (!auth_domain || !client_id) {
-                      e.preventDefault();
-                      setError("LINE connection is not configured. Please check environment variables.");
-                    }
-                  }}
-                >
-                  {auth_domain && client_id ? "Connect LINE Account" : "LINE Connection Not Configured"}
-                </a>
-              // )
-            }
-
-            <button
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              onClick={handleLogout}
-            >
-              Log Out
-            </button>
-          </form>
+    </div>
+  ); */
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-md p-8 bg-blue-500 shadow-lg shadow-blue-500/50 rounded-lg">
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="mt-4 text-2xl font-bold">Edit Your Profile</h1>
         </div>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          {errorMessage && (
+            <div className="text-red-300 text-sm mb-4 p-2 bg-red-800 rounded">
+              {errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div className="text-green-300 text-sm mb-4 p-2 bg-green-800 rounded">
+              {successMessage}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+              Email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={userData.email || ""}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">
+              First Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="firstName"
+              name="firstName"
+              type="text"
+              defaultValue={userData.firstName || ""}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">
+              Last Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="lastName"
+              name="lastName"
+              type="text"
+              defaultValue={userData.lastName || ""}
+              required
+            />
+          </div>
+          {/* <div>
+            <label htmlFor="lastname" className="block text-sm font-medium text-gray-200">
+              Last Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="lastname"
+              name="lastname"
+              type="text"
+              defaultValue={userData.lastname || ""}
+              required
+            />
+          </div> */}
+          {/* <div>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-200">
+              Phone
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              defaultValue={userData.phoneNumber || ""}
+            />
+          </div> */}
+          {/* {error && (
+            <div className="text-red-500 text-sm">{error}</div> // Display error message
+          )} */}
+
+          <button
+            type="submit"
+            className="w-full py-2 px-4 text-white rounded bg-gray-700 hover:bg-gray-800 font-semibold"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Updating..." : "Update Profile"}
+          </button>
+
+          {
+            // userData.lineConnected ? (
+            //   <div className="text-green-500 text-md font-semibold">
+            //     LINE User Connected!
+            //   </div>
+            // ) : (
+              <a
+                href={auth_domain && client_id && mounted ? 
+                  `${auth_domain}/oauth2/authorize?identity_provider=Line&response_type=code&client_id=${client_id}&scope=openid%20profile&redirect_uri=${getRedirectUri()}` :
+                  "#"
+                }
+                className={`text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                  auth_domain && client_id 
+                    ? "bg-green-500 hover:bg-green-700 text-white" 
+                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                }`}
+                onClick={(e) => {
+                  if (!auth_domain || !client_id) {
+                    e.preventDefault();
+                    setError("LINE connection is not configured. Please check environment variables.");
+                  }
+                }}
+              >
+                {auth_domain && client_id ? "Connect LINE Account" : "LINE Connection Not Configured"}
+              </a>
+            // )
+          }
+
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={() => signOut()}
+          >
+            Log Out
+          </button>
+        </form>
       </div>
-    );
-  }
+    </div>
+  );
 }

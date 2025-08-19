@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const router = useRouter()
   
@@ -20,12 +21,21 @@ export default function RegisterPage() {
 
     const formData = new FormData(e.currentTarget)
 
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await apiClient.register({
         firstName: formData.get('firstName') as string,
         lastName: formData.get('lastName') as string,
         email: formData.get('email') as string,
-        password: formData.get('password') as string,
+        password,
         phoneNumber: formData.get('phoneNumber') as string,
         countryCode: formData.get('countryCode') as string,
         nationalId: formData.get('nationalId') as string,
@@ -39,7 +49,7 @@ export default function RegisterPage() {
         }, 2000)
       } else {
         // const errorData = await response.json();
-        setError(response.message || 'Login failed')
+        setError(response.message || 'Registration failed')
       }
     } catch (error) {
       console.error('Registration error:', error)
@@ -129,63 +139,15 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-200">
-              Phone Number
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
+              Confirm Password
             </label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="phoneNumber"
-              name="phoneNumber"
-              type="tel"
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="countryCode" className="block text-sm font-medium text-gray-200">
-              Country Code
-            </label>
-            <select
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="countryCode"
-              name="countryCode"
-              required
-            >
-              <option value="">Select your country</option>
-              <option value="TH">Thailand</option>
-              <option value="US">United States</option>
-              <option value="GB">United Kingdom</option>
-              <option value="JP">Japan</option>
-              <option value="SG">Singapore</option>
-              <option value="MY">Malaysia</option>
-              <option value="ID">Indonesia</option>
-              <option value="PH">Philippines</option>
-              <option value="VN">Vietnam</option>
-              <option value="KR">South Korea</option>
-              <option value="CN">China</option>
-              <option value="IN">India</option>
-              <option value="AU">Australia</option>
-              <option value="CA">Canada</option>
-              <option value="DE">Germany</option>
-              <option value="FR">France</option>
-              <option value="IT">Italy</option>
-              <option value="ES">Spain</option>
-              <option value="BR">Brazil</option>
-              <option value="MX">Mexico</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="nationalId" className="block text-sm font-medium text-gray-200">
-              National ID
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="nationalId"
-              name="nationalId"
-              type="text"
-              placeholder="Enter your national ID"
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
               required
             />
           </div>

@@ -13,7 +13,9 @@
     "@aws-sdk/client-cognito-identity-provider": "^3.864.0",
     "iron-session": "^8.0.4",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "next": "^15.3.5",
+    "next-auth": "^4.24.11",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },

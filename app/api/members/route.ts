@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const memberData = await request.json();
 
     // Validate required fields
-    if (!memberData.firstName || !memberData.lastName || !memberData.email || !memberData.password || !memberData.phoneNumber || !memberData.countryCode || !memberData.nationalId) {
+    if (!memberData.firstName || !memberData.lastName || !memberData.email || !memberData.password) {
       return NextResponse.json(
         { success: false, message: "All fields are required" },
         { status: 400 }

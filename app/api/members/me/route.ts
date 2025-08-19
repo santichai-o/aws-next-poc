@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-// import jwt from 'jsonwebtoken';
-import { getIronSession } from "iron-session";
-import { sessionOptions } from "@/lib/session";
-import { SessionData } from "@/types";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(request: NextRequest) {
-  const session = await getIronSession<SessionData>(request, new NextResponse(), sessionOptions);
-
-  if (!session || !session.idToken) {
-    return NextResponse.json(
-      { success: false, message: "User token not found" },
-      { status: 401 },
-    );
-  }
-
-  const userToken = session.idToken;
+  const session = await getServerSession(authOptions);
+  const userToken = session?.idToken;
 
   // ตัวอย่างการดึงข้อมูลจาก token
   // try {
@@ -62,7 +52,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await getIronSession<SessionData>(request, new NextResponse(), sessionOptions);
+  const session = await getServerSession(authOptions);
 
   if (!session || !session.idToken) {
     return NextResponse.json(

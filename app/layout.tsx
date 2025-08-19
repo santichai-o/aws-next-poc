@@ -1,23 +1,19 @@
-import type { Metadata } from 'next'
-import { ReactNode } from 'react'
-import './globals.css'
+'use client';
 
-export const metadata: Metadata = {
-  title: 'PII Data Management',
-  description: 'Personal Identifiable Information Data Management System',
-}
+import { SessionProvider } from "next-auth/react";
+import { ReactNode } from "react";
+import "./globals.css";
 
 export default function RootLayout({
   children,
 }: {
-  children: ReactNode
+  children: ReactNode;
 }) {
   return (
-    <>
-      <html lang="en">
-        <head />
-        <body>{children}</body>
-      </html>
-    </>
-  )
+    <html lang="en">
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
+    </html>
+  );
 }
