@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -56,6 +57,14 @@ export default function LoginPage() {
           >
             {isSubmitting ? "Redirecting..." : "Sign In with LINE"}
           </button>
+
+          {/* Forgot Password */}
+          <Link
+            href="/members/forgot-password"
+            className="block w-full text-center py-2 px-4 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Forgot password?
+          </Link>
         </div>
 
         <div className="mt-6 text-center">
