@@ -114,6 +114,15 @@ export default function ConfirmPage() {
               Sign in
             </button>
           </p>
+          <p className="text-sm text-gray-200 mt-2">
+            Didn't get the code?{' '}
+            <button
+              onClick={() => router.push('/members/resend-confirmation-code')}
+              className="text-white hover:underline font-semibold"
+            >
+              Resend confirmation code
+            </button>
+          </p>
         </div>
       </div>
     </div>

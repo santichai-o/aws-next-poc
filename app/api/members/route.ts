@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,9 +31,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Member registration data:', memberData);
 
+    // Attach Authorization header if a session.idToken exists (like /members/me)
+    const session = await getServerSession(authOptions);
+    const userToken = session?.idToken;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (userToken) headers["Authorization"] = `Bearer ${userToken}`;
+
     const res = await fetch(`${apiUrl}/members`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(memberData),
       cache: "no-store",
     });

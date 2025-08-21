@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { jwtDecode } from "jwt-decode";  // ✅ ใช้ named import
 import { useRouter } from "next/navigation";
@@ -8,8 +8,14 @@ import { MemberProfile } from "@/types";
 import { apiClient } from "@/lib/api";
 import { useMounted } from "@/hooks/useMounted";
 
+// Define a type for the id token payload to include our custom claim
+type DecodedIdToken = {
+  [key: string]: unknown;
+  'custom:member-id'?: string;
+};
+
 export default function Profile() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const mounted = useMounted();
   const [userData, setUserData] = useState<MemberProfile | null>(null);
@@ -21,6 +27,18 @@ export default function Profile() {
   // Get environment variables
   const auth_domain = process.env.NEXT_PUBLIC_AUTH_DOMAIN;
   const client_id = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
+  
+  // Decode idToken safely, and memoize derived memberId to avoid effect re-runs
+  const idToken = session?.idToken;
+  const memberId = useMemo(() => {
+    try {
+      if (!idToken) return undefined;
+      const d = jwtDecode<DecodedIdToken>(idToken);
+      return d['custom:member-id'] as string | undefined;
+    } catch {
+      return undefined;
+    }
+  }, [idToken]);
 
   // Helper function to get redirect URI safely
   const getRedirectUri = () => {
@@ -53,10 +71,19 @@ export default function Profile() {
   }, [router]);
 
   useEffect(() => {
-    if (mounted) {
-      fetchUserData();
+    if (!mounted) return;
+    if (status === 'loading') return;
+    if (status === 'unauthenticated') {
+      router.replace('/members/login');
+      return;
     }
-  }, [mounted, fetchUserData]);
+    // authenticated
+    if (!memberId) {
+      router.replace('/members/register');
+      return;
+    }
+    fetchUserData();
+  }, [mounted, status, memberId, fetchUserData, router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -89,29 +116,8 @@ export default function Profile() {
     }
   };
 
-  if (!session || loading || userData === null) return <div>Loading...</div>;
+  if (status === 'loading' || loading || userData === null) return <div>Loading...</div>;
 
-  // Decode idToken
-  const decoded = session.idToken
-    ? jwtDecode(session.idToken)
-    : null;
-
-  /* return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Profile</h1>
-      <pre className="bg-gray-100 p-4 rounded mt-4">
-        {decoded ? JSON.stringify(decoded, null, 2) : "No idToken found"}
-      </pre>
-      <div className="mt-4">
-        <button
-          onClick={() => signOut()}
-          className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600"
-        >
-          Sign Out
-        </button>
-      </div>
-    </div>
-  ); */
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md p-8 bg-blue-500 shadow-lg shadow-blue-500/50 rounded-lg">
