@@ -32,7 +32,7 @@ export async function GET(req) {
 
   const tokenData = await tokenRes.json();
   if (!tokenRes.ok) {
-    console.error(tokenData);
+    // console.error(tokenData);
     return NextResponse.json({ error: 'Token exchange failed' }, { status: 500 });
   }
 

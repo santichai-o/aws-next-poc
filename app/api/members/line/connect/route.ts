@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIronSession } from "iron-session";
-import { sessionOptions } from "@/lib/session";
-import { SessionData } from "@/types";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(request: NextRequest) {
-  const session = await getIronSession<SessionData>(request, new NextResponse(), sessionOptions);
+  const session = await getServerSession(authOptions);
+  const userToken = session?.idToken;
 
-  if (!session || !session.idToken) {
+  if (!userToken) {
     return NextResponse.json(
       { success: false, message: "User token not found" },
       { status: 401 },
     );
   }
 
-  const userToken = session.idToken;
+  // const userToken = session.idToken;
 
   const apiUrl = process.env.API_URL;
 

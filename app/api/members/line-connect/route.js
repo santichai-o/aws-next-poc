@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { getIronSession } from "iron-session";
-import { sessionOptions } from "@/lib/session";
-import { SessionData } from "@/types";
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(req) {
-  const session = await getIronSession(req, new NextResponse(), sessionOptions);
+  // Use NextAuth session (iron-session is not used for login in this app)
+  const session = await getServerSession(authOptions);
+
+  // console.log('LINE Connect session (NextAuth):', {
+  //   hasSession: !!session,
+  //   hasIdToken: !!session?.idToken,
+  // });
+
   if (!session || !session.idToken) {
     return NextResponse.json(
-      { success: false, message: "User token not found" },
-      { status: 401 },
+      { success: false, message: 'User token not found' },
+      { status: 401 }
     );
   }
 
@@ -21,6 +27,8 @@ export async function GET(req) {
   if (!code) {
     return NextResponse.json({ error: 'Missing code' }, { status: 400 });
   }
+
+  console.log('LINE Connect code:', { hasCode: !!code });
 
   // ป้องกัน CSRF ด้วยการตรวจสอบ state
   // if (state !== process.env.LINE_LOGIN_STATE) {
@@ -48,45 +56,45 @@ export async function GET(req) {
 
   const { id_token } = tokenData;
 
-  // 2. Validate id_token
+  // 2. Decode id_token to extract LINE federated identity info
   try {
-    const decoded = jwt.decode(id_token);
-    const lineProviderUsername = decoded['cognito:username'];
-    const lineUserId = decoded.identities.find(identity => identity.providerName === 'Line')?.userId;
+    const decoded = jwt.decode(id_token) || {};
+    const identities = Array.isArray(decoded?.identities) ? decoded.identities : [];
+    // Try to get provider user id from Cognito 'identities' array when federated with LINE
+    const lineUserId = identities.find((identity) => identity.providerName === 'Line')?.userId
+      || decoded["custom:lineUserId"] // optional custom mapping
+      || null;
+    // Prefer 'name' then 'nickname', then fallback to cognito username
+    const lineUsername = decoded.name || decoded.nickname || decoded['cognito:username'] || null;
+    const lineProviderUser = { lineUsername, lineUserId };
 
-    if (!lineProviderUsername || !lineUserId) {
-      return NextResponse.json({ error: 'Line user ID not found in ID token' }, { status: 400 });
+    if (!lineUsername || !lineUserId) {
+      return NextResponse.json({ error: 'LINE user info not found in ID token' }, { status: 400 });
     }
 
-    console.log('Decoded ID Token:', lineProviderUsername, lineUserId);
-
     const res = await fetch(`${process.env.API_URL}/members/line/connect`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${userToken}`
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
       },
-      body: JSON.stringify({ lineProviderUsername, lineUserId }),
-      cache: "no-store",
+      body: JSON.stringify(lineProviderUser),
+      cache: 'no-store',
     });
 
     const data = await res.json().catch(() => ({}));
-
-    // console.log('Connect LINE response:', data);
-
-    if (!res.ok) {
+  if (!res.ok) {
       return NextResponse.json(
-        { success: false, message: data.message || "Invalid credentials" },
+        { success: false, message: data.message || 'Invalid credentials' },
         { status: res.status || 401 }
       );
     }
+  // success – proceed to redirect
   } catch (err) {
-    console.error('Invalid ID Token', err);
+    console.error('Failed to decode/handle ID Token', err);
     return NextResponse.json({ error: 'Invalid ID Token' }, { status: 400 });
   }
 
   // 3. Redirect ไปหน้า /
-  const response = NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_APP_URL, req.url));
-
-  return response;
+  return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_APP_URL));
 }

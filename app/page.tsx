@@ -116,6 +116,26 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      return;
+    }
+    try {
+      const res = await apiClient.delete<any>("/members/me") as any;
+      if ((res as any)?.success !== false) {
+        // Deleted successfully - sign the user out
+        await signOut({ callbackUrl: "/members/login" });
+        return;
+      }
+      setError((res as any)?.message || "Failed to delete account");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An error occurred while deleting account";
+      setError(msg);
+    }
+  };
+
   if (status === 'loading' || loading || userData === null) return <div>Loading...</div>;
 
   return (
@@ -245,6 +265,14 @@ export default function Profile() {
             onClick={() => signOut()}
           >
             Log Out
+          </button>
+
+          <button
+            type="button"
+            className="mt-2 bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={handleDeleteAccount}
+          >
+            Delete Account
           </button>
         </form>
       </div>

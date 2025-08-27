@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
       issuer: process.env.COGNITO_ISSUER!, 
       authorization: {
         params: {
-          scope: "openid profile", // แนะนำใส่ email ด้วย
+          scope: "openid profile",
         },
       },
       checks: ["pkce", "state", "nonce"], // 👈 เพิ่ม nonce check

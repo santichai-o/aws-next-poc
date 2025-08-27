@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "API_URL not set" }, { status: 500 });
     }
 
-    console.log('Member registration data:', memberData);
+    // console.log('Member registration data:', memberData);
 
     // Attach Authorization header if a session.idToken exists (like /members/me)
     const session = await getServerSession(authOptions);
@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(memberData),
       cache: "no-store",
     });
+
+    // console.log('Response from member creation:', res);
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));

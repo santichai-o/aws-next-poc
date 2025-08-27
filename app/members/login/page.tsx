@@ -13,13 +13,11 @@ export default function LoginPage() {
     setErrorMessage(null);
 
     try {
-      await signIn("cognito", {
-        callbackUrl: "/",
-        // 👇 ตรงนี้คือ key: ส่ง identity_provider ให้ Hosted UI
-        ...(providerHint && {
-          authorizationParams: { identity_provider: providerHint, prompt: "login"},
-        }),
-      });
+      await signIn(
+        "cognito",
+        { callbackUrl: "/" },
+        providerHint ? { identity_provider: providerHint, prompt: "login" } : undefined
+      );
     } catch (error: any) {
       setErrorMessage(error.message || "Login failed");
       setIsSubmitting(false);
@@ -41,7 +39,7 @@ export default function LoginPage() {
           {/* Email / Cognito */}
           <button
             type="button"
-            onClick={() => handleLogin("Cognito")}
+            onClick={() => handleLogin("COGNITO")}
             className="w-full py-2 px-4 text-white rounded bg-blue-600 hover:bg-blue-700"
             disabled={isSubmitting}
           >
