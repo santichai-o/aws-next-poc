@@ -65,8 +65,9 @@ export async function GET(req) {
       || decoded["custom:lineUserId"] // optional custom mapping
       || null;
     // Prefer 'name' then 'nickname', then fallback to cognito username
-    const lineUsername = decoded.name || decoded.nickname || decoded['cognito:username'] || null;
-    const lineProviderUser = { lineUsername, lineUserId };
+    const lineUsername = decoded['cognito:username'];
+    const picture = decoded['picture'] || null;
+    const lineProviderUser = { lineUsername, lineUserId, picture };
 
     if (!lineUsername || !lineUserId) {
       return NextResponse.json({ error: 'LINE user info not found in ID token' }, { status: 400 });
