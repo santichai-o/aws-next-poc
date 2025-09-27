@@ -15,6 +15,9 @@ export const sessionOptions: SessionOptions = {
 declare module "iron-session" {
   interface IronSessionData {
     idToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresAt?: number;
     user?: {
       username: string;
       // เพิ่ม fields ได้ตามต้องการ

@@ -69,6 +69,8 @@ export async function GET(req) {
     const picture = decoded['picture'] || null;
     const lineProviderUser = { lineUsername, lineUserId, picture };
 
+    if (decoded['name']) lineProviderUser.name = decoded['name'];
+
     if (!lineUsername || !lineUserId) {
       return NextResponse.json({ error: 'LINE user info not found in ID token' }, { status: 400 });
     }

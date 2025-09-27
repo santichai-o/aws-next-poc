@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// import jwt from 'jsonwebtoken';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const userToken = session?.idToken;
 
+  console.log("userToken:", userToken);
+
   // ตัวอย่างการดึงข้อมูลจาก token
   // try {
   //   const decoded = jwt.decode(userToken);
-  //   console.log('Member ID:', decoded['custom:member-id']);
+  //   console.log('Member ID:', decoded);
   // } catch (err) {
   //   console.error('Invalid ID Token', err);
   // }

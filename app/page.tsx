@@ -34,6 +34,9 @@ export default function Profile() {
     try {
       if (!idToken) return undefined;
       const d = jwtDecode<DecodedIdToken>(idToken);
+
+      console.log("Decoded ID Token:", d); // Debug log to inspect decoded token
+
       return d['custom:member-id'] as string | undefined;
     } catch {
       return undefined;

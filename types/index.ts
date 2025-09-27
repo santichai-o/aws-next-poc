@@ -82,4 +82,7 @@ export interface UserForm {
 
 export interface SessionData {
   idToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
 }
