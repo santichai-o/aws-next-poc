@@ -40,6 +40,8 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: "openid profile",
+          // prompt: "consent login",
+          max_age: 0,
         },
       },
       checks: ["pkce", "state", "nonce"], // 👈 เพิ่ม nonce check
